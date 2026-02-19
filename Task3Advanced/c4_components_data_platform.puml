@@ -1,0 +1,45 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title "C4 Model - Component Diagram - Data Portal & Analytics Platform"
+
+Container_Boundary(data_platform, "Data & Analytics Platform") {
+
+    Component(api_gateway, "API Gateway", "Go/Kong", "Entry point for Data Portal UI and external analytics tools")
+    Component(auth_component, "Auth Component", "Keycloak adapter", "Handles user authentication and role-based access control (RBAC)")
+
+    Component_Boundary(stream_processing_layer, "Stream Processing Layer") {
+        Component(kafka_consumer, "Kafka Consumer", "Flink/Spark Streaming", "Consumes raw events from Event Bus")
+        Component(data_transformer, "Data Transformer", "SQL/Python", "Cleans, enriches, and transforms data")
+        Component(data_quality_check, "Data Quality Check", "Great Expectations", "Validates data schema and business rules")
+    }
+
+    Component_Boundary(storage_layer, "Storage Layer") {
+        ComponentDb(data_lake_s3, "Data Lake (S3)", "MinIO/S3", "Bronze (Raw), Silver (Cleaned), Gold (Aggregated) zones")
+        ComponentDb(clickhouse, "Data Mart (ClickHouse)", "ClickHouse", "High-performance OLAP database for real-time analytics")
+        ComponentDb(metadata_store, "Metadata Store", "PostgreSQL", "Stores catalog info, user permissions, report configs")
+    }
+
+    Component_Boundary(serving_layer, "Serving Layer") {
+        Component(query_engine, "Query Engine / API", "FastAPI/Trino", "Executes SQL queries against Data Marts and Data Lake")
+        Component(catalog_service, "Data Catalog Service", "OpenMetadata/Amundsen", "Provides search and discovery of data assets")
+        Component(visualization_engine, "Visualization Engine", "Superset/Metabase (embedded)", "Renders charts and dashboards")
+    }
+}
+
+Rel(api_gateway, auth_component, "Validates Token")
+Rel(api_gateway, query_engine, "Proxies query requests")
+Rel(api_gateway, catalog_service, "Proxies catalog requests")
+Rel(api_gateway, visualization_engine, "Proxies dashboard requests")
+
+Rel(kafka_consumer, data_transformer, "Passes events")
+Rel(data_transformer, data_quality_check, "Validates data")
+Rel(data_transformer, data_lake_s3, "Writes to Silver/Gold zones")
+Rel(data_transformer, clickhouse, "Writes real-time aggregates")
+
+Rel(query_engine, clickhouse, "SQL Queries (Fast Path)")
+Rel(query_engine, data_lake_s3, "SQL Queries (Cold Path / Trino)")
+Rel(catalog_service, metadata_store, "Reads/Writes Metadata")
+Rel(visualization_engine, query_engine, "Fetches data for charts")
+
+@enduml

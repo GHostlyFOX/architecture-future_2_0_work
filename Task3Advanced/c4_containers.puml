@@ -1,0 +1,71 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "C4 Model - Container Diagram - Future 2.0 (3-year horizon)"
+
+Person(patient, "Patient", "Uses mobile app/web portal to book appointments, view results")
+Person(doctor, "Doctor", "Uses internal system to manage patient records, diagnostics")
+Person(analyst, "Business Analyst", "Uses Data Portal for reports and self-service analytics")
+Person(fintech_user, "Fintech Customer", "Uses banking services")
+System_Ext(external_partners, "External Partners", "Insurance, Pharmacies, Device Manufacturers")
+
+System_Boundary(future_platform, "Future 2.0 Platform (Event-Driven Architecture)") {
+
+    Container(api_gateway, "API Gateway / BFF", "Go/Java", "Single entry point for clients, routing, authentication")
+
+    Container(auth_service, "Auth Service (Identity Provider)", "Keycloak/OIDC", "Centralized authentication and authorization")
+
+    ContainerDb(event_bus, "Event Bus", "Kafka/Pulsar", "Backbone for asynchronous communication between domains")
+
+    System_Boundary(medicine_domain, "Medicine Domain") {
+        Container(emr_service, "EMR Service", "Java/Spring", "Manages Electronic Medical Records")
+        Container(diagnostics_service, "Diagnostics Service", "Python", "Handles diagnostic data and integration with devices")
+        ContainerDb(med_db, "Medicine DB", "PostgreSQL", "Stores patient data")
+    }
+
+    System_Boundary(fintech_domain, "Fintech Domain") {
+        Container(banking_service, "Core Banking Service", "Go", "Manages accounts, transactions")
+        Container(credit_service, "Credit Service", "Go", "Loan processing")
+        ContainerDb(fin_db, "Fintech DB", "PostgreSQL/CockroachDB", "Financial data")
+    }
+
+    System_Boundary(ai_domain, "AI Domain") {
+        Container(ai_model_service, "AI Inference Service", "Python/TensorFlow", "Provides real-time predictions")
+        Container(ai_training_pipeline, "Training Pipeline", "Kubeflow", "Retrains models on new data")
+        ContainerDb(model_registry, "Model Registry", "MLflow", "Stores model versions")
+    }
+
+    System_Boundary(data_platform, "Data & Analytics Platform") {
+        Container(stream_processing, "Stream Processor", "Flink/Spark Streaming", "Real-time data transformation and enrichment")
+        ContainerDb(data_lake, "Data Lake", "S3/MinIO + Delta Lake", "Raw and processed data storage (Bronze/Silver/Gold)")
+        ContainerDb(analytical_db, "Analytical DB (Data Marts)", "ClickHouse/Greenplum", "High-speed query engine for reports")
+        Container(data_portal_backend, "Data Portal Backend", "Python/FastAPI", "API for self-service analytics, catalog search")
+        Container(data_portal_ui, "Data Portal UI", "React/Vue", "Web interface for analysts to build reports")
+    }
+}
+
+Rel(patient, api_gateway, "Uses", "HTTPS")
+Rel(doctor, api_gateway, "Uses", "HTTPS")
+Rel(fintech_user, api_gateway, "Uses", "HTTPS")
+Rel(analyst, data_portal_ui, "Uses", "HTTPS")
+
+Rel(api_gateway, auth_service, "Authenticates", "gRPC/HTTP")
+Rel(api_gateway, emr_service, "Proxies requests", "gRPC")
+Rel(api_gateway, banking_service, "Proxies requests", "gRPC")
+
+Rel(emr_service, event_bus, "Publishes/Subscribes Events", "Kafka Protocol")
+Rel(diagnostics_service, event_bus, "Publishes Events", "Kafka Protocol")
+Rel(banking_service, event_bus, "Publishes/Subscribes Events", "Kafka Protocol")
+Rel(ai_model_service, event_bus, "Subscribes to Data Events", "Kafka Protocol")
+
+Rel(stream_processing, event_bus, "Consumes raw events", "Kafka Protocol")
+Rel(stream_processing, data_lake, "Writes processed data", "S3 API")
+Rel(stream_processing, analytical_db, "Writes aggregated data", "JDBC/Native")
+
+Rel(data_portal_backend, analytical_db, "Queries data", "SQL")
+Rel(data_portal_backend, data_lake, "Accesses historical data", "S3 API")
+Rel(data_portal_ui, data_portal_backend, "API Calls", "HTTPS")
+
+Rel(external_partners, api_gateway, "API Integration", "HTTPS")
+
+@enduml
