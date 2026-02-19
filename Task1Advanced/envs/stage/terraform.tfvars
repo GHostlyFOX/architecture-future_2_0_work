@@ -1,0 +1,9 @@
+vm_name             = "stage-vm"
+vm_cpu              = 4
+vm_ram              = 4
+boot_disk_image_id  = "fd827b91d52655555555"
+boot_disk_size      = 20
+secondary_disk_size = 20
+subnet_id           = "e9b1234567890abcdef0"
+ssh_public_key      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+zone                = "ru-central1-b"

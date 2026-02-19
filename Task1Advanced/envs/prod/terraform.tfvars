@@ -1,0 +1,9 @@
+vm_name             = "prod-vm"
+vm_cpu              = 8
+vm_ram              = 8
+boot_disk_image_id  = "fd827b91d52655555555"
+boot_disk_size      = 50
+secondary_disk_size = 50
+subnet_id           = "e9b1234567890abcdef0"
+ssh_public_key      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+zone                = "ru-central1-c"

@@ -1,0 +1,9 @@
+vm_name             = "dev-vm"
+vm_cpu              = 2
+vm_ram              = 2
+boot_disk_image_id  = "fd827b91d52655555555"
+boot_disk_size      = 10
+secondary_disk_size = 10
+subnet_id           = "e9b1234567890abcdef0"
+ssh_public_key      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+zone                = "ru-central1-a"
