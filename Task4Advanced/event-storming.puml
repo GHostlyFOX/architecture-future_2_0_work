@@ -1,0 +1,111 @@
+@startuml
+!theme plain
+
+title "Event Storming: Ключевой процесс обслуживания пациента (Future 2.0)"
+
+' Определяем стиль для элементов Event Storming
+skinparam state {
+    BackgroundColor<<Command>> LightBlue
+    BorderColor<<Command>> Blue
+
+    BackgroundColor<<Event>> Orange
+    BorderColor<<Event>> DarkOrange
+
+    BackgroundColor<<Aggregate>> LightYellow
+    BorderColor<<Aggregate>> Gold
+
+    BackgroundColor<<System>> Pink
+    BorderColor<<System>> Red
+
+    BackgroundColor<<ReadModel>> LightGreen
+    BorderColor<<ReadModel>> Green
+}
+
+' Легенда
+legend right
+    | Color | Type |
+    |<#LightBlue>| Command |
+    |<#Orange>| Event |
+    |<#LightYellow>| Aggregate |
+    |<#Pink>| External System |
+    |<#LightGreen>| Read Model |
+end legend
+
+' Начало процесса
+state "Регистрация пациента" as Registration {
+    state "Зарегистрировать пациента" as CmdReg <<Command>>
+    state "Patient" as AggPat <<Aggregate>>
+    state "Пациент зарегистрирован" as EvPatReg <<Event>>
+
+    CmdReg --> AggPat
+    AggPat --> EvPatReg
+}
+
+state "Запись на прием" as Scheduling {
+    state "Записаться на прием" as CmdBook <<Command>>
+    state "Appointment" as AggAppt <<Aggregate>>
+    state "Прием назначен" as EvApptBooked <<Event>>
+
+    EvPatReg --> CmdBook : policy
+    CmdBook --> AggAppt
+    AggAppt --> EvApptBooked
+}
+
+state "Проведение приема" as Visit {
+    state "Начать прием" as CmdStartVisit <<Command>>
+    state "MedicalRecord" as AggMedRec <<Aggregate>>
+    state "Прием завершен" as EvVisitDone <<Event>>
+    state "Назначить диагностику" as CmdOrderDiag <<Command>>
+    state "DiagnosticOrder" as AggDiagOrder <<Aggregate>>
+    state "Диагностика назначена" as EvDiagOrdered <<Event>>
+
+    EvApptBooked --> CmdStartVisit : (Врач)
+    CmdStartVisit --> AggMedRec
+    AggMedRec --> EvVisitDone
+
+    EvVisitDone --> CmdOrderDiag : (Врач)
+    CmdOrderDiag --> AggDiagOrder
+    AggDiagOrder --> EvDiagOrdered
+}
+
+state "Диагностика (AI)" as Diagnostics {
+    state "AI System" as ExtAI <<System>>
+    state "AnalysisResult" as AggResult <<Aggregate>>
+    state "Результат диагностики готов" as EvDiagReady <<Event>>
+    state "Оценка риска (AI)" as CmdRiskAssess <<Command>>
+
+    EvDiagOrdered --> ExtAI : Integrates
+    ExtAI --> CmdRiskAssess
+    CmdRiskAssess --> AggResult
+    AggResult --> EvDiagReady
+}
+
+state "Финтех (Оплата/Кредит)" as Fintech {
+    state "Выставить счет" as CmdInv <<Command>>
+    state "Invoice" as AggInv <<Aggregate>>
+    state "Счет выставлен" as EvInvCreated <<Event>>
+
+    state "Запросить кредит" as CmdLoan <<Command>>
+    state "LoanApplication" as AggLoan <<Aggregate>>
+    state "Кредит одобрен" as EvLoanApproved <<Event>>
+
+    EvVisitDone --> CmdInv : Policy: Если платная услуга
+    CmdInv --> AggInv
+    AggInv --> EvInvCreated
+
+    EvDiagReady --> CmdLoan : Policy: Если дорогостоящее лечение
+    CmdLoan --> AggLoan
+    AggLoan --> EvLoanApproved
+}
+
+state "Аналитика" as Analytics {
+    state "Витрина пациента" as RmPatient <<ReadModel>>
+    state "Финансовый отчет" as RmFinance <<ReadModel>>
+
+    EvPatReg --> RmPatient : Projector
+    EvVisitDone --> RmPatient : Projector
+    EvInvCreated --> RmFinance : Projector
+    EvLoanApproved --> RmFinance : Projector
+}
+
+@enduml

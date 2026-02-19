@@ -1,0 +1,57 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title "Bounded Contexts & Relationships (Future 2.0)"
+
+' Определяем контексты
+rectangle "Medical Domain" {
+    component "Patient Management\nContext" as PatientCtx
+    component "Medical Records\nContext" as MedRecCtx
+    component "Diagnostics & AI\nContext" as DiagCtx
+}
+
+rectangle "Fintech Domain" {
+    component "Core Banking\nContext" as BankCtx
+    component "Lending\nContext" as LoanCtx
+}
+
+rectangle "Data Domain" {
+    component "Analytics & Reports\nContext" as AnalyticsCtx
+}
+
+' Отношения (Context Mapping)
+
+' PatientCtx -> MedRecCtx (Partnership / Shared Kernel for patient id)
+PatientCtx -[hidden]-> MedRecCtx
+PatientCtx "Upstream" --> "Downstream (ACL)" MedRecCtx : PatientRegistered
+
+' MedRecCtx -> DiagCtx (Customer/Supplier)
+MedRecCtx "Upstream" --> "Downstream" DiagCtx : DiagnosticOrdered
+
+' DiagCtx -> MedRecCtx (Open Host Service)
+DiagCtx "Upstream (OHS)" --> "Downstream" MedRecCtx : DiagnosticResultReady
+
+' MedRecCtx -> BankCtx (Customer/Supplier - Billing)
+MedRecCtx "Upstream" --> "Downstream" BankCtx : ServiceRendered (Billable)
+
+' PatientCtx -> BankCtx (Shared Kernel on Person ID)
+PatientCtx -[hidden]-> BankCtx
+PatientCtx "Upstream" --> "Downstream (ACL)" BankCtx : PatientUpdated
+
+' BankCtx -> LoanCtx (Partnership)
+BankCtx "Upstream" --> "Downstream" LoanCtx : AccountStatus
+
+' All -> AnalyticsCtx (Published Language)
+PatientCtx ..> AnalyticsCtx : Events (PL)
+MedRecCtx ..> AnalyticsCtx : Events (PL)
+DiagCtx ..> AnalyticsCtx : Events (PL)
+BankCtx ..> AnalyticsCtx : Events (PL)
+LoanCtx ..> AnalyticsCtx : Events (PL)
+
+note right of PatientCtx : Aggregates:\n- Patient\n- ContactInfo
+note bottom of MedRecCtx : Aggregates:\n- MedicalHistory\n- Appointment\n- TreatmentPlan
+note bottom of DiagCtx : Aggregates:\n- DiagnosticOrder\n- AnalysisResult\n- AIModel
+note right of BankCtx : Aggregates:\n- BankAccount\n- Transaction\n- Invoice
+note bottom of LoanCtx : Aggregates:\n- LoanApplication\n- CreditScore\n- LoanAgreement
+
+@enduml
