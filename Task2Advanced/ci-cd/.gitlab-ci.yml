@@ -1,0 +1,48 @@
+stages:
+  - init
+  - plan
+  - apply
+
+image:
+  name: hashicorp/terraform:light
+  entrypoint:
+    - '/usr/bin/env'
+    - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+# Переменные окружения для доступа к Yandex Object Storage (backend)
+# Должны быть настроены в CI/CD settings проекта как защищенные переменные
+variables:
+  # ACCESS_KEY: Введите Access Key ID для доступа к бакету
+  # SECRET_KEY: Введите Secret Access Key для доступа к бакету
+  # YC_TOKEN: OAuth токен или IAM токен для Yandex Cloud
+  # YC_CLOUD_ID: ID облака
+  # YC_FOLDER_ID: ID каталога
+  TF_ROOT: ${CI_PROJECT_DIR}/Task2Advanced
+
+before_script:
+  - cd ${TF_ROOT}
+  - terraform --version
+  - echo "Initializing Terraform..."
+  - terraform init \
+      -backend-config="access_key=$ACCESS_KEY" \
+      -backend-config="secret_key=$SECRET_KEY"
+
+terraform-plan:
+  stage: plan
+  script:
+    - terraform plan -out=tfplan -input=false
+  artifacts:
+    name: tfplan
+    paths:
+      - ${TF_ROOT}/tfplan
+    expire_in: 1 week
+
+terraform-apply:
+  stage: apply
+  script:
+    - terraform apply -input=false "tfplan"
+  dependencies:
+    - terraform-plan
+  when: manual
+  only:
+    - main
