@@ -1,45 +1,45 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-title "C4 Model - Component Diagram - Data Portal & Analytics Platform"
+title "C4 Model - Диаграмма Компонентов - Платформа Данных и Аналитики"
 
-Container_Boundary(data_platform, "Data & Analytics Platform") {
+Container_Boundary(data_platform, "Платформа Данных и Аналитики") {
 
-    Component(api_gateway, "API Gateway", "Go/Kong", "Entry point for Data Portal UI and external analytics tools")
-    Component(auth_component, "Auth Component", "Keycloak adapter", "Handles user authentication and role-based access control (RBAC)")
+    Component(api_gateway, "API Gateway", "Go/Kong", "Точка входа для UI Портала Данных и внешних аналитических инструментов")
+    Component(auth_component, "Компонент Аутентификации", "Keycloak adapter", "Обработка аутентификации пользователей и RBAC")
 
-    Component_Boundary(stream_processing_layer, "Stream Processing Layer") {
-        Component(kafka_consumer, "Kafka Consumer", "Flink/Spark Streaming", "Consumes raw events from Event Bus")
-        Component(data_transformer, "Data Transformer", "SQL/Python", "Cleans, enriches, and transforms data")
-        Component(data_quality_check, "Data Quality Check", "Great Expectations", "Validates data schema and business rules")
+    Boundary(stream_processing_layer, "Слой Потоковой Обработки") {
+        Component(kafka_consumer, "Kafka Consumer", "Flink/Spark Streaming", "Потребляет сырые события из Шины Событий")
+        Component(data_transformer, "Трансформер Данных", "SQL/Python", "Очищает, обогащает и трансформирует данные")
+        Component(data_quality_check, "Проверка Качества Данных", "Great Expectations", "Валидирует схему данных и бизнес-правила")
     }
 
-    Component_Boundary(storage_layer, "Storage Layer") {
-        ComponentDb(data_lake_s3, "Data Lake (S3)", "MinIO/S3", "Bronze (Raw), Silver (Cleaned), Gold (Aggregated) zones")
-        ComponentDb(clickhouse, "Data Mart (ClickHouse)", "ClickHouse", "High-performance OLAP database for real-time analytics")
-        ComponentDb(metadata_store, "Metadata Store", "PostgreSQL", "Stores catalog info, user permissions, report configs")
+    Boundary(storage_layer, "Слой Хранения") {
+        ComponentDb(data_lake_s3, "Озеро Данных (S3)", "MinIO/S3", "Зоны: Бронза (Сырые), Серебро (Очищенные), Золото (Агрегированные)")
+        ComponentDb(clickhouse, "Витрина Данных (ClickHouse)", "ClickHouse", "Высокопроизводительная OLAP БД для аналитики в реальном времени")
+        ComponentDb(metadata_store, "Хранилище Метаданных", "PostgreSQL", "Хранит информацию о каталоге, правах пользователей, конфигах отчетов")
     }
 
-    Component_Boundary(serving_layer, "Serving Layer") {
-        Component(query_engine, "Query Engine / API", "FastAPI/Trino", "Executes SQL queries against Data Marts and Data Lake")
-        Component(catalog_service, "Data Catalog Service", "OpenMetadata/Amundsen", "Provides search and discovery of data assets")
-        Component(visualization_engine, "Visualization Engine", "Superset/Metabase (embedded)", "Renders charts and dashboards")
+    Boundary(serving_layer, "Слой Обслуживания (Serving)") {
+        Component(query_engine, "Движок Запросов / API", "FastAPI/Trino", "Выполняет SQL запросы к Витринам и Озеру Данных")
+        Component(catalog_service, "Сервис Каталога Данных", "OpenMetadata/Amundsen", "Обеспечивает поиск и обнаружение активов данных")
+        Component(visualization_engine, "Движок Визуализации", "Superset/Metabase (embedded)", "Рендерит графики и дашборды")
     }
 }
 
-Rel(api_gateway, auth_component, "Validates Token")
-Rel(api_gateway, query_engine, "Proxies query requests")
-Rel(api_gateway, catalog_service, "Proxies catalog requests")
-Rel(api_gateway, visualization_engine, "Proxies dashboard requests")
+Rel(api_gateway, auth_component, "Валидирует токен")
+Rel(api_gateway, query_engine, "Проксирует запросы на данные")
+Rel(api_gateway, catalog_service, "Проксирует запросы к каталогу")
+Rel(api_gateway, visualization_engine, "Проксирует запросы к дашбордам")
 
-Rel(kafka_consumer, data_transformer, "Passes events")
-Rel(data_transformer, data_quality_check, "Validates data")
-Rel(data_transformer, data_lake_s3, "Writes to Silver/Gold zones")
-Rel(data_transformer, clickhouse, "Writes real-time aggregates")
+Rel(kafka_consumer, data_transformer, "Передает события")
+Rel(data_transformer, data_quality_check, "Валидирует данные")
+Rel(data_transformer, data_lake_s3, "Пишет в зоны Silver/Gold")
+Rel(data_transformer, clickhouse, "Пишет агрегаты реального времени")
 
-Rel(query_engine, clickhouse, "SQL Queries (Fast Path)")
-Rel(query_engine, data_lake_s3, "SQL Queries (Cold Path / Trino)")
-Rel(catalog_service, metadata_store, "Reads/Writes Metadata")
-Rel(visualization_engine, query_engine, "Fetches data for charts")
+Rel(query_engine, clickhouse, "SQL Запросы (Горячий путь)")
+Rel(query_engine, data_lake_s3, "SQL Запросы (Холодный путь / Trino)")
+Rel(catalog_service, metadata_store, "Читает/Пишет Метаданные")
+Rel(visualization_engine, query_engine, "Запрашивает данные для графиков")
 
 @enduml

@@ -1,71 +1,71 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title "C4 Model - Container Diagram - Future 2.0 (3-year horizon)"
+title "C4 Model - Диаграмма Контейнеров - Будущее 2.0 (Горизонт 3 года)"
 
-Person(patient, "Patient", "Uses mobile app/web portal to book appointments, view results")
-Person(doctor, "Doctor", "Uses internal system to manage patient records, diagnostics")
-Person(analyst, "Business Analyst", "Uses Data Portal for reports and self-service analytics")
-Person(fintech_user, "Fintech Customer", "Uses banking services")
-System_Ext(external_partners, "External Partners", "Insurance, Pharmacies, Device Manufacturers")
+Person(patient, "Пациент", "Использует мобильное приложение/веб-портал для записи на прием и просмотра результатов")
+Person(doctor, "Врач", "Использует внутреннюю систему для ведения медицинских карт и диагностики")
+Person(analyst, "Бизнес-аналитик", "Использует Портал Данных для отчетов и аналитики самообслуживания")
+Person(fintech_user, "Клиент Финтеха", "Пользуется банковскими услугами")
+System_Ext(external_partners, "Внешние Партнеры", "Страховые компании, Аптеки, Производители оборудования")
 
-System_Boundary(future_platform, "Future 2.0 Platform (Event-Driven Architecture)") {
+System_Boundary(future_platform, "Платформа Будущее 2.0 (Событийно-ориентированная архитектура)") {
 
-    Container(api_gateway, "API Gateway / BFF", "Go/Java", "Single entry point for clients, routing, authentication")
+    Container(api_gateway, "API Gateway / BFF", "Go/Java", "Единая точка входа для клиентов, маршрутизация, аутентификация")
 
-    Container(auth_service, "Auth Service (Identity Provider)", "Keycloak/OIDC", "Centralized authentication and authorization")
+    Container(auth_service, "Сервис Аутентификации (Identity Provider)", "Keycloak/OIDC", "Централизованная аутентификация и авторизация")
 
-    ContainerDb(event_bus, "Event Bus", "Kafka/Pulsar", "Backbone for asynchronous communication between domains")
+    ContainerDb(event_bus, "Шина Событий", "Kafka/Pulsar", "Магистраль для асинхронного обмена сообщениями между доменами")
 
-    System_Boundary(medicine_domain, "Medicine Domain") {
-        Container(emr_service, "EMR Service", "Java/Spring", "Manages Electronic Medical Records")
-        Container(diagnostics_service, "Diagnostics Service", "Python", "Handles diagnostic data and integration with devices")
-        ContainerDb(med_db, "Medicine DB", "PostgreSQL", "Stores patient data")
+    System_Boundary(medicine_domain, "Домен Медицина") {
+        Container(emr_service, "Сервис ЭМК (EMR)", "Java/Spring", "Управляет электронными медицинскими картами")
+        Container(diagnostics_service, "Сервис Диагностики", "Python", "Обрабатывает диагностические данные и интеграцию с оборудованием")
+        ContainerDb(med_db, "Медицинская БД", "PostgreSQL", "Хранит данные пациентов")
     }
 
-    System_Boundary(fintech_domain, "Fintech Domain") {
-        Container(banking_service, "Core Banking Service", "Go", "Manages accounts, transactions")
-        Container(credit_service, "Credit Service", "Go", "Loan processing")
-        ContainerDb(fin_db, "Fintech DB", "PostgreSQL/CockroachDB", "Financial data")
+    System_Boundary(fintech_domain, "Домен Финтех") {
+        Container(banking_service, "Основной Банковский Сервис", "Go", "Управляет счетами, транзакциями")
+        Container(credit_service, "Кредитный Сервис", "Go", "Обработка заявок на кредит")
+        ContainerDb(fin_db, "Финтех БД", "PostgreSQL/CockroachDB", "Финансовые данные")
     }
 
-    System_Boundary(ai_domain, "AI Domain") {
-        Container(ai_model_service, "AI Inference Service", "Python/TensorFlow", "Provides real-time predictions")
-        Container(ai_training_pipeline, "Training Pipeline", "Kubeflow", "Retrains models on new data")
-        ContainerDb(model_registry, "Model Registry", "MLflow", "Stores model versions")
+    System_Boundary(ai_domain, "Домен ИИ") {
+        Container(ai_model_service, "Сервис ИИ (Inference)", "Python/TensorFlow", "Предоставляет прогнозы в реальном времени")
+        Container(ai_training_pipeline, "Пайплайн Обучения", "Kubeflow", "Переобучает модели на новых данных")
+        ContainerDb(model_registry, "Реестр Моделей", "MLflow", "Хранит версии моделей")
     }
 
-    System_Boundary(data_platform, "Data & Analytics Platform") {
-        Container(stream_processing, "Stream Processor", "Flink/Spark Streaming", "Real-time data transformation and enrichment")
-        ContainerDb(data_lake, "Data Lake", "S3/MinIO + Delta Lake", "Raw and processed data storage (Bronze/Silver/Gold)")
-        ContainerDb(analytical_db, "Analytical DB (Data Marts)", "ClickHouse/Greenplum", "High-speed query engine for reports")
-        Container(data_portal_backend, "Data Portal Backend", "Python/FastAPI", "API for self-service analytics, catalog search")
-        Container(data_portal_ui, "Data Portal UI", "React/Vue", "Web interface for analysts to build reports")
+    System_Boundary(data_platform, "Платформа Данных и Аналитики") {
+        Container(stream_processing, "Потоковый Процессор", "Flink/Spark Streaming", "Трансформация и обогащение данных в реальном времени")
+        ContainerDb(data_lake, "Озеро Данных (Data Lake)", "S3/MinIO + Delta Lake", "Хранение сырых и обработанных данных (Bronze/Silver/Gold)")
+        ContainerDb(analytical_db, "Аналитическая БД (Витрины)", "ClickHouse/Greenplum", "Высокоскоростной движок для отчетов")
+        Container(data_portal_backend, "Бэкенд Портала Данных", "Python/FastAPI", "API для аналитики самообслуживания, поиск по каталогу")
+        Container(data_portal_ui, "UI Портала Данных", "React/Vue", "Веб-интерфейс для аналитиков для построения отчетов")
     }
 }
 
-Rel(patient, api_gateway, "Uses", "HTTPS")
-Rel(doctor, api_gateway, "Uses", "HTTPS")
-Rel(fintech_user, api_gateway, "Uses", "HTTPS")
-Rel(analyst, data_portal_ui, "Uses", "HTTPS")
+Rel(patient, api_gateway, "Использует", "HTTPS")
+Rel(doctor, api_gateway, "Использует", "HTTPS")
+Rel(fintech_user, api_gateway, "Использует", "HTTPS")
+Rel(analyst, data_portal_ui, "Использует", "HTTPS")
 
-Rel(api_gateway, auth_service, "Authenticates", "gRPC/HTTP")
-Rel(api_gateway, emr_service, "Proxies requests", "gRPC")
-Rel(api_gateway, banking_service, "Proxies requests", "gRPC")
+Rel(api_gateway, auth_service, "Аутентифицирует", "gRPC/HTTP")
+Rel(api_gateway, emr_service, "Проксирует запросы", "gRPC")
+Rel(api_gateway, banking_service, "Проксирует запросы", "gRPC")
 
-Rel(emr_service, event_bus, "Publishes/Subscribes Events", "Kafka Protocol")
-Rel(diagnostics_service, event_bus, "Publishes Events", "Kafka Protocol")
-Rel(banking_service, event_bus, "Publishes/Subscribes Events", "Kafka Protocol")
-Rel(ai_model_service, event_bus, "Subscribes to Data Events", "Kafka Protocol")
+Rel(emr_service, event_bus, "Публикует/Подписывается на события", "Протокол Kafka")
+Rel(diagnostics_service, event_bus, "Публикует события", "Протокол Kafka")
+Rel(banking_service, event_bus, "Публикует/Подписывается на события", "Протокол Kafka")
+Rel(ai_model_service, event_bus, "Подписывается на события данных", "Протокол Kafka")
 
-Rel(stream_processing, event_bus, "Consumes raw events", "Kafka Protocol")
-Rel(stream_processing, data_lake, "Writes processed data", "S3 API")
-Rel(stream_processing, analytical_db, "Writes aggregated data", "JDBC/Native")
+Rel(stream_processing, event_bus, "Потребляет сырые события", "Протокол Kafka")
+Rel(stream_processing, data_lake, "Записывает обработанные данные", "S3 API")
+Rel(stream_processing, analytical_db, "Записывает агрегированные данные", "JDBC/Native")
 
-Rel(data_portal_backend, analytical_db, "Queries data", "SQL")
-Rel(data_portal_backend, data_lake, "Accesses historical data", "S3 API")
-Rel(data_portal_ui, data_portal_backend, "API Calls", "HTTPS")
+Rel(data_portal_backend, analytical_db, "Запрашивает данные", "SQL")
+Rel(data_portal_backend, data_lake, "Доступ к историческим данным", "S3 API")
+Rel(data_portal_ui, data_portal_backend, "Вызовы API", "HTTPS")
 
-Rel(external_partners, api_gateway, "API Integration", "HTTPS")
+Rel(external_partners, api_gateway, "Интеграция API", "HTTPS")
 
 @enduml
